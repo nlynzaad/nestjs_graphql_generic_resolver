@@ -2,61 +2,97 @@ import { Query, Mutation, Args, Int, Resolver } from '@nestjs/graphql';
 import { IBaseDataService, IUpdateInput } from './base.service';
 import { DeepPartial } from 'typeorm';
 import { capitalize } from 'lodash';
-import { BaseEntity } from './entities/base.entity';
 import { Type } from '@nestjs/common';
 
-export function BaseResolver<T extends Type<unknown>>(entity: T): any {
-  @Resolver({ isAbstract: true })
-  abstract class BaseResolverHost {
-    protected constructor(private readonly BaseService: IBaseDataService<T>) {}
+type Constructor<I> = new (...args: any[]) => I; // Main Point
 
-    @Query(() => [entity], {
-      name: `get${capitalize(entity.name)}s`,
+export interface IBaseResolver<T> {
+  readonly BaseService: IBaseDataService<T>;
+  findAll: () => Promise<T[] | null>;
+  findOne: (id: number) => Promise<T | null>;
+  findByFieldAll: (field: string, lookupValue: string) => Promise<T[] | null>;
+  findByFieldOne: (field: string, lookupValue: string) => Promise<T | null>;
+  create: (createInput: DeepPartial<T>) => Promise<T | boolean>;
+  update: (updateInput: IUpdateInput<T>) => Promise<T | boolean>;
+  remove: (id: number) => Promise<boolean>;
+}
+
+export function BaseResolver<T, C, U>(
+  entityType: Constructor<T>,
+  createInputType: C,
+  updateInputType: U,
+): Type<IBaseResolver<T>> {
+  @Resolver({ isAbstract: true })
+  class BaseResolverHost implements IBaseResolver<T> {
+    constructor(readonly BaseService: IBaseDataService<T>) {}
+
+    @Query(() => [entityType], {
+      name: `get${capitalize(entityType.name)}s`,
       nullable: true,
     })
     findAll() {
       return this.BaseService.findAll();
     }
 
-    @Query(() => entity, {
-      name: `get${capitalize(entity.name)}`,
+    @Query(() => entityType, {
+      name: `get${capitalize(entityType.name)}`,
       nullable: true,
     })
     findOne(@Args('id', { type: () => Int }) id: number) {
       return this.BaseService.findOne(id);
     }
 
-    @Query(() => entity, {
-      name: `get${capitalize(entity.name)}ByName`,
+    @Query(() => [entityType], {
+      name: `getAll${capitalize(entityType.name)}ByField`,
       nullable: true,
     })
-    findByFieldOne(@Args('name', { type: () => String }) name: string) {
-      return this.BaseService.findByFieldOne('name', name);
+    findByFieldAll(
+      @Args({ type: () => String, name: 'field' }) field: string,
+      @Args({ type: () => String, name: 'lookupValue' }) lookupValue: string,
+    ) {
+      return this.BaseService.findByFieldAll(field, lookupValue);
     }
 
-    @Mutation(() => entity, { name: `create${capitalize(entity.name)}` })
+    @Query(() => entityType, {
+      name: `get${capitalize(entityType.name)}ByField`,
+      nullable: true,
+    })
+    findByFieldOne(
+      @Args({ type: () => String, name: 'field' }) field: string,
+      @Args({ type: () => String, name: 'lookupValue' }) lookupValue: string,
+    ) {
+      return this.BaseService.findByFieldOne(field, lookupValue);
+    }
+
+    @Mutation(() => entityType, {
+      name: `create${capitalize(entityType.name)}`,
+    })
     create(
       @Args({
-        type: () => entity,
-        name: `create${capitalize(entity.name)}Input`,
+        type: () => createInputType,
+        name: `create${capitalize(entityType.name)}Input`,
       })
       createInput: DeepPartial<T>,
     ): Promise<T | boolean> {
       return this.BaseService.create(createInput);
     }
 
-    @Mutation(() => entity, { name: `update${capitalize(entity.name)}` })
+    @Mutation(() => entityType, {
+      name: `update${capitalize(entityType.name)}`,
+    })
     update(
       @Args({
-        type: () => entity,
-        name: `update${capitalize(entity.name)}Input`,
+        type: () => updateInputType,
+        name: `update${capitalize(entityType.name)}Input`,
       })
-      updateInput: IUpdateInput<unknown>,
+      updateInput: IUpdateInput<T>,
     ) {
       return this.BaseService.update(updateInput);
     }
 
-    @Mutation(() => entity, { name: `remove${capitalize(entity.name)}` })
+    @Mutation(() => entityType, {
+      name: `remove${capitalize(entityType.name)}`,
+    })
     remove(@Args('id', { type: () => Int }) id: number) {
       return this.BaseService.remove(id);
     }

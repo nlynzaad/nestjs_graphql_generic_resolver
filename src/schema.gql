@@ -23,11 +23,29 @@ input UserInput {
 type Query {
   getUsers: [User!]
   getUser(id: Int!): User
-  getUserByName(name: String!): User
+  getAllUserByField(lookupValue: String!, field: String!): [User!]
+  getUserByField(lookupValue: String!, field: String!): User
 }
 
 type Mutation {
-  createUser(createUserInput: UserInput!): User!
-  updateUser(updateUserInput: UserInput!): User!
+  createUser(createUserInput: createUserInput!): User!
+  updateUser(updateUserInput: updateUserInput!): User!
   removeUser(id: Int!): User!
+}
+
+input createUserInput {
+  """Firstname of user"""
+  firstname: String!
+
+  """Surname of user"""
+  surname: String!
+}
+
+input updateUserInput {
+  """Firstname of user"""
+  firstname: String
+
+  """Surname of user"""
+  surname: String
+  id: Int!
 }

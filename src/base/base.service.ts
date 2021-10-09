@@ -18,8 +18,8 @@ export interface IBaseDataService<T> {
   create: (createInput: DeepPartial<T>) => Promise<T | boolean>;
   findAll: () => Promise<T[] | null>;
   findAllDeleted: () => Promise<T[] | null>;
-  findByFieldAll: (field: string, lookupString: string) => Promise<T[] | null>;
-  findByFieldOne: (field: string, lookupString: string) => Promise<T | null>;
+  findByFieldAll: (field: string, lookupString: unknown) => Promise<T[] | null>;
+  findByFieldOne: (field: string, lookupString: unknown) => Promise<T | null>;
   findMany: (ids: Array<number>) => Promise<T[] | null>;
   findOne: (id: number) => Promise<T | null>;
   update: (updateInput: IUpdateInput<T>) => Promise<T | boolean>;
