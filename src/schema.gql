@@ -1,0 +1,33 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  id: ID!
+
+  """Firstname of user"""
+  firstname: String!
+
+  """Surname of user"""
+  surname: String!
+}
+
+input UserInput {
+  """Firstname of user"""
+  firstname: String!
+
+  """Surname of user"""
+  surname: String!
+}
+
+type Query {
+  getUsers: [User!]
+  getUser(id: Int!): User
+  getUserByName(name: String!): User
+}
+
+type Mutation {
+  createUser(createUserInput: UserInput!): User!
+  updateUser(updateUserInput: UserInput!): User!
+  removeUser(id: Int!): User!
+}
